@@ -18,6 +18,7 @@ module.exports = (config) ->
       'bower_components/angular/angular.js'
       'bower_components/angular-mocks/angular-mocks.js'
       'bower_components/jquery/jquery.js'
+      'bower_components/long/Long.js'
       'vendor/browserTrigger.js'
       'src/*.coffee'
       'spec/*.coffee'

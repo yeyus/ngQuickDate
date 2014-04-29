@@ -106,7 +106,13 @@ app.directive "quickDatepicker", ['ngQuickDateDefaults', '$filter', '$sce', (ngQ
 
     # Refresh the calendar, the input dates, and the button date
     refreshView = ->
-      date = if ngModelCtrl.$modelValue then new Date(ngModelCtrl.$modelValue) else null
+      if isLong(ngModelCtrl.$modelValue)
+        date = longToDate(ngModelCtrl.$modelValue)
+      else if ngModelCtrl.$modelValue
+        date = new Date(ngModelCtrl.$modelValue)
+      else
+        date = null
+
       setupCalendarView()
       setInputFieldValues(date)
       scope.mainButtonStr = if date then $filter('date')(date, scope.labelFormat) else scope.placeholder
@@ -176,6 +182,9 @@ app.directive "quickDatepicker", ['ngQuickDateDefaults', '$filter', '$sce', (ngQ
       else if angular.isString(viewVal)
         ngModelCtrl.$setValidity('required', true);
         scope.parseDateFunction(viewVal)
+      else if viewVal instanceof dcodeIO.Long
+        ngModelCtrl.$setValidity('required', true);
+        parseDateFromLong(viewVal)
       else
         null
     )
@@ -187,6 +196,8 @@ app.directive "quickDatepicker", ['ngQuickDateDefaults', '$filter', '$sce', (ngQ
         modelVal
       else if angular.isString(modelVal)
         scope.parseDateFunction(modelVal)
+      else if isLong(modelVal)
+        longToDate(modelVal)
       else
         undefined
     )
@@ -205,6 +216,9 @@ app.directive "quickDatepicker", ['ngQuickDateDefaults', '$filter', '$sce', (ngQ
     parseDateString = ngQuickDateDefaults.parseDateFunction
 
     datesAreEqual = (d1, d2, compareTimes=false) ->
+      if(isLong(d2))
+        d2 = longToDate(d2);
+
       if compareTimes
         (d1 - d2) == 0
       else
@@ -219,9 +233,21 @@ app.directive "quickDatepicker", ['ngQuickDateDefaults', '$filter', '$sce', (ngQ
     getDaysInMonth = (year, month) ->
       [31, (if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) then 29 else 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month]
 
+    # LONG UTILS
+    # ==================================
+    isLong = (long) ->
+      return long && long.high && long.low;
+
+    longToDate = (long) ->
+      l = new dcodeIO.Long(long.low, long.high, long.unsigned);
+      return new Date(l.toNumber());
+
+    dateToLong = (d) ->
+      return dcodeIO.Long.fromNumber(d.getTime());
+
     # DATA WATCHES
     # ==================================
-    
+
     # Called when the model is updated from outside the datepicker
     ngModelCtrl.$render = ->
       setCalendarDate(ngModelCtrl.$viewValue)
