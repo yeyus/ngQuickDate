@@ -54,6 +54,23 @@ describe "ngQuickDate", ->
         browserTrigger($textInput, 'blur')
         expect(element.scope().myDate).toEqual(new Date(Date.parse('2013-11-15')))
 
+    describe 'Given a datepicker with a Long model', ->
+      targetStr = '2014-11-15 10:00'
+      targetDate = new Date(targetStr)
+      beforeEach angular.mock.inject(($compile, $rootScope) ->
+        scope = $rootScope
+        scope.myDate = dcodeIO.Long.fromNumber(targetDate.getTime());
+        element = $compile("<quick-datepicker ng-model='myDate' disable-timepicker='true'/>")(scope)
+        scope.$digest()
+      )
+
+      it 'allows the date to be updated', ->
+        $textInput = $(element).find(".quickdate-date-input")
+        $textInput.val(targetStr)
+        browserTrigger($textInput, 'input')
+        browserTrigger($textInput, 'blur')
+        expect(element.scope().myDate).toEqual(dcodeIO.Long.fromNumber(targetDate.getTime());)
+
     describe 'Given a basic datepicker', ->
       beforeEach angular.mock.inject(($compile, $rootScope) ->
         scope = $rootScope

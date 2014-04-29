@@ -61,7 +61,7 @@
         },
         replace: true,
         link: function(scope, element, attrs, ngModelCtrl) {
-          var dateToString, datepickerClicked, datesAreEqual, datesAreEqualToMinute, getDaysInMonth, initialize, parseDateString, refreshView, setCalendarDate, setConfigOptions, setInputFieldValues, setupCalendarView, stringToDate;
+          var dateToLong, dateToString, datepickerClicked, datesAreEqual, datesAreEqualToMinute, getDaysInMonth, initialize, isLong, longToDate, parseDateString, refreshView, setCalendarDate, setConfigOptions, setInputFieldValues, setupCalendarView, stringToDate;
           initialize = function() {
             setConfigOptions();
             scope.toggleCalendar(false);
@@ -110,7 +110,13 @@
           });
           refreshView = function() {
             var date;
-            date = ngModelCtrl.$modelValue ? new Date(ngModelCtrl.$modelValue) : null;
+            if (isLong(ngModelCtrl.$modelValue)) {
+              date = longToDate(ngModelCtrl.$modelValue);
+            } else if (ngModelCtrl.$modelValue) {
+              date = new Date(ngModelCtrl.$modelValue);
+            } else {
+              date = null;
+            }
             setupCalendarView();
             setInputFieldValues(date);
             scope.mainButtonStr = date ? $filter('date')(date, scope.labelFormat) : scope.placeholder;
@@ -179,6 +185,9 @@
             } else if (angular.isString(viewVal)) {
               ngModelCtrl.$setValidity('required', true);
               return scope.parseDateFunction(viewVal);
+            } else if (viewVal instanceof dcodeIO.Long) {
+              ngModelCtrl.$setValidity('required', true);
+              return parseDateFromLong(viewVal);
             } else {
               return null;
             }
@@ -188,6 +197,8 @@
               return modelVal;
             } else if (angular.isString(modelVal)) {
               return scope.parseDateFunction(modelVal);
+            } else if (isLong(modelVal)) {
+              return longToDate(modelVal);
             } else {
               return void 0;
             }
@@ -207,6 +218,9 @@
             if (compareTimes == null) {
               compareTimes = false;
             }
+            if (isLong(d2)) {
+              d2 = longToDate(d2);
+            }
             if (compareTimes) {
               return (d1 - d2) === 0;
             } else {
@@ -223,6 +237,17 @@
           };
           getDaysInMonth = function(year, month) {
             return [31, ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month];
+          };
+          isLong = function(long) {
+            return long && long.high && long.low;
+          };
+          longToDate = function(long) {
+            var l;
+            l = new dcodeIO.Long(long.low, long.high, long.unsigned);
+            return new Date(l.toNumber());
+          };
+          dateToLong = function(d) {
+            return dcodeIO.Long.fromNumber(d.getTime());
           };
           ngModelCtrl.$render = function() {
             setCalendarDate(ngModelCtrl.$viewValue);
